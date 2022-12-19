@@ -1,6 +1,37 @@
-﻿@{
-    ViewData["Title"] = "Privacy Policy";
-}
-<h1>@ViewData["Title"]</h1>
+﻿
 
-<p>Use this page to detail your site's privacy policy.</p>
+<div ng-app="app-test" ng-controller="testController as vm">
+
+    <input type="file" ng-model="file" ng-change="loadVideo(file)">
+    <video ng-src="{{videoUrl}}" controls></video>
+
+</div>
+
+
+@section Scripts{
+    <script>
+        var app = angular.module("app-test", ['ngSanitize', 'ngAnimate', 'ngTouch']);
+        //var app = angular.module("app-image-viewer", []);
+
+        app.controller("testController", function ($scope, $http, $timeout, $window) {
+
+            vm = this;
+       
+                $scope.loadVideo = function (file) {
+                    var fileReader = new FileReader();
+                    fileReader.onload = function (e) {
+                        $scope.$apply(function () {
+                            $scope.videoUrl = e.target.result;
+                        });
+                    };
+                    fileReader.readAsDataURL(file);
+                };
+            
+
+
+
+
+        });</script>
+
+
+}
