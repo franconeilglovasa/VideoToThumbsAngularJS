@@ -1,12 +1,18 @@
 ﻿
 
 <div ng-app="app-test" ng-controller="testController as vm">
-    <video id="myVideo" src="https://www.w3schools.com/html/mov_bbb.mp4"></video>
+  
+    <input type="file" ng-change="vm.onFileSelected($event)" />
+
+    <video ng-src="{{vm.videoUrl}}" controls></video>
+
+
+@*    <video id="myVideo" src="{{vm.videoUrl}}"></video>*@
 
     <canvas id="myCanvas"></canvas>
     <form>
         <label for="time">Time:</label>
-        @*  <input type="number" id="time" value="0" ng-model="vm.time">*@
+
         <button ng-click="vm.captureFrame()">Capture Frame</button>
     </form>
     <button ng-click="vm.captureFrameAndUpload()">Capture Frame and Upload</button>
@@ -15,13 +21,14 @@
 
 @section Scripts{
     <script>
-        var app = angular.module("app-test", ['ngSanitize', 'ngAnimate', 'ngTouch']);
+        var app = angular.module("app-test", ['ngSanitize', 'ngAnimate', 'ngTouch', '$sce']);
         //var app = angular.module("app-image-viewer", []);
 
-        app.controller("testController", function ($scope, $http, $timeout, $window) {
+        app.controller("testController", function ($scope, $http, $timeout, $window, $sce) {
 
             vm = this;
             vm.time = 5;
+            vm.videoUrl = $sce.trustAsResourceUrl('https://www.w3schools.com/html/mov_bbb.mp4');
 
             vm.captureFrame = function () {
                 // Get the video element and the canvas element
@@ -87,10 +94,25 @@
                     var image = new Image();
                     image.crossOrigin = "Anonymous";
 
-                    image.src = canvas.toDataURL();
+                    //image.src = canvas.toDataURL();
 
-                    vm.uploadImage(image.src, "test");
+                    //vm.uploadImage(image.src, "test");
                     //vm.putImage(image, 'image.png');
+
+                    var imageData = canvas.toDataURL("image/png");
+
+                    // Use the $http service to send a PUT request
+                    $http.put("/api/Data/UploadImage", imageData, {
+                        headers: {
+                            "Content-Type": "image/png"
+                        }
+                    }).then(function (response) {
+                        // The request was successful
+                        console.log("Image uploaded successfully");
+                    }, function (response) {
+                        // There was an error
+                        console.log("There was an error uploading the image: " + response.statusText);
+                    });
 
 
 
@@ -125,7 +147,7 @@
 
             }
 
-            vm.putImage = function(image: any, imageName: string) {
+            vm.putImage = function (image, imageName) {
                 // Set the content type header of the request
                 const headers = new HttpHeaders().set('Content-Type', 'application/json');
 
@@ -140,6 +162,46 @@
                     }
                 );
             }
+
+            vm.onFileSelected = function (event) {
+                var file = event.target.files[0];
+
+                // Create a URL for the selected file
+                var fileUrl = URL.createObjectURL(file);
+
+                // Trust the URL of the video
+                vm.videoUrl = $sce.trustAsResourceUrl(fileUrl);
+            }
+
+            //vm.onFileSelected2 = function (files) {
+            //    var validFiles = files.filter(function (file) {
+            //        console.log("File", file);
+            //        return !file.$error;
+            //    });
+            //    var invalidFiles = files.filter(function (file) {
+            //        return file.$error;
+            //    }).map(function (invalidFile) {
+            //        var errorMessage;
+            //        switch (invalidFile.$error) {
+            //            case "pattern":
+            //                errorMessage =
+            //                    "The file has invalid format. Acceptable image file formats are .mp4, .m4v, .ogg, .ogv, .webm.";
+            //                break;
+            //            case "maxSize":
+            //                errorMessage =
+            //                    "The file is too large. The maximum allowed file size is 500 MB.";
+            //                break;
+            //            default:
+            //                errorMessage =
+            //                    "Something wrong with this file";
+            //        }
+
+            //        return {
+            //            name: invalidFile.name,
+            //            errorMessage: errorMessage
+            //        }
+            //    });
+            //};
 
 
 

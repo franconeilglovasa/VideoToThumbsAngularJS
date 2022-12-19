@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using VideoToThumbsAngularJS.ViewModels;
 
@@ -8,15 +9,28 @@ namespace VideoToThumbsAngularJS.Controllers.Api
     [ApiController]
     public class DataController : ControllerBase
     {
-        public DataController()
-        {
+        [Obsolete]
+        private readonly Microsoft.AspNetCore.Hosting.IHostingEnvironment _hostingEnvironment;
 
+        [Obsolete]
+        public DataController(Microsoft.AspNetCore.Hosting.IHostingEnvironment hostingEnvironment)
+        {
+            _hostingEnvironment = hostingEnvironment;
         }
 
         [HttpPut("UploadImage")]
-        public async Task<ActionResult<string>> UploadImage(ImageVM image)
+        [Obsolete]
+        [AllowAnonymous]
+        public async Task<ActionResult<string>> UploadImage([FromBody] string imageData)
         {
-            return "Success";
+            var imageFilePath = Path.Combine(_hostingEnvironment.WebRootPath, "images", "image.png");
+            using (var stream = new FileStream(imageFilePath, FileMode.Create))
+            {
+                var imageBytes = Convert.FromBase64String(imageData);
+                await stream.WriteAsync(imageBytes, 0, imageBytes.Length);
+            }
+
+            return Ok();
 
         }
     }
