@@ -1,0 +1,102 @@
+﻿
+
+<div ng-app="app-test" ng-controller="testController as vm">
+    <div>
+        <label for="video Url">VideoURL:</label>
+        <input type="text" id="videourl" name="videourl" ng-model="vm.videoUrl"><br><br>
+    </div>
+    <button type="button" ng-click="getThumbnailForVideo(vm.videoUrl)">Get Thumbs</button>
+    <div>
+        <img ng-src="{{vm.thumbs}}" alt="thumbs" />
+    </div>
+    <input type="file" onchange="angular.element(this).scope().FileChange(event)" />
+
+</div>
+
+
+@section Scripts{
+    <script>
+        var app = angular.module("app-test", ['ngSanitize', 'ngAnimate', 'ngTouch']);
+        //var app = angular.module("app-image-viewer", []);
+
+        app.controller("testController", function ($scope, $http, $timeout, $window) {
+
+            //vm = this;
+            $scope.vm = { videoUrl: "", thumbs: '' };
+
+
+            $scope.vm.videoUrl = "https://www.w3schools.com/html/mov_bbb.mp4";
+
+            $scope.getThumbnailForVideo = async function (videoUrl) {
+                const video = document.createElement("video");
+                const canvas = document.createElement("canvas");
+                video.style.display = "none";
+                canvas.style.display = "none";
+
+                // Trigger video load
+                await new Promise((resolve, reject) => {
+                    video.addEventListener("loadedmetadata", () => {
+                        video.width = video.videoWidth;
+                        video.height = video.videoHeight;
+                        canvas.width = video.videoWidth;
+                        canvas.height = video.videoHeight;
+                        // Seek the video to 25%
+                        video.currentTime = video.duration * 0.25;
+                    });
+                    video.src = videoUrl;
+                    video.addEventListener("seeked", () => resolve());
+                });
+
+                // Draw the thumbnailz
+                canvas
+                    .getContext("2d")
+                    .drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
+                $scope.$apply(function () {
+                    $scope.vm.thumbs = canvas.toDataURL("image/png");
+                });
+                // return imageUrl;
+            };
+
+            $scope.createObjectURL = async function (videoUrl) {
+                const video = document.createElement("video");
+                const canvas = document.createElement("canvas");
+                video.style.display = "none";
+                canvas.style.display = "none";
+
+                // Trigger video load
+                await new Promise((resolve, reject) => {
+                    video.addEventListener("loadedmetadata", () => {
+                        video.width = video.videoWidth;
+                        video.height = video.videoHeight;
+                        canvas.width = video.videoWidth;
+                        canvas.height = video.videoHeight;
+                        // Seek the video to 25%
+                        video.currentTime = video.duration * 0.25;
+                    });
+                    video.src = videoUrl;
+                    video.addEventListener("seeked", () => resolve());
+                });
+
+                // Draw the thumbnailz
+                canvas
+                    .getContext("2d")
+                    .drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
+                $scope.$apply(function () {
+                    $scope.vm.thumbs = canvas.toDataURL("image/png");
+                });
+                // return imageUrl;
+            };
+
+
+
+            $scope.FileChange = async function (e) {
+                const fileUrl = URL.createObjectURL(e.target.files);
+                const thumbUrl = await getThumbnailForVideo(fileUrl);
+                img.src = thumbUrl;
+            };
+
+
+        });</script>
+
+
+}

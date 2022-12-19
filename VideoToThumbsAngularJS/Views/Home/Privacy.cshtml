@@ -1,0 +1,64 @@
+﻿
+
+<div ng-app="app-test" ng-controller="testController as vm">
+    <video id="myVideo" src="https://www.w3schools.com/html/mov_bbb.mp4"></video>
+
+    <canvas id="myCanvas"></canvas>
+    <form>
+        <label for="time">Time:</label>
+      @*  <input type="number" id="time" value="0" ng-model="vm.time">*@
+        <button ng-click="vm.captureFrame()">Capture Frame</button>
+    </form>
+</div>
+
+
+@section Scripts{
+    <script>
+        var app = angular.module("app-test", ['ngSanitize', 'ngAnimate', 'ngTouch']);
+        //var app = angular.module("app-image-viewer", []);
+
+        app.controller("testController", function ($scope, $http, $timeout, $window) {
+
+            vm = this;
+            vm.time = 5;
+
+            vm.captureFrame = function() {
+                // Get the video element and the canvas element
+                var video = document.getElementById('myVideo');
+                var canvas = document.getElementById('myCanvas');
+
+                // Get the time input element
+                var time = 0.2 * video.duration;
+
+                // Set the current time of the video to the calculated time
+                video.currentTime = time;
+
+     
+                // Wait for the video to seek to the specified time
+                video.addEventListener('seeked', function () {
+                    // Get the context of the canvas
+                    var context = canvas.getContext('2d');
+
+                    // Set the canvas size to the size of the video
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+
+                    // Draw the current frame of the video onto the canvas
+                    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                    // Convert the canvas content to an image
+                    var image = new Image();
+                    image.crossOrigin = "Anonymous";
+
+                    image.src = canvas.toDataURL();
+
+
+
+                    // You can now use the image as you like, for example, displaying it in an img element or uploading it to a server.
+                });
+            }
+
+        });</script>
+
+
+}
