@@ -1,16 +1,15 @@
 ﻿
 
 <div ng-app="app-test" ng-controller="testController as vm">
-    <div>
-        <label for="video Url">VideoURL:</label>
-        <input type="text" id="videourl" name="videourl" ng-model="vm.videoUrl"><br><br>
-    </div>
-    <button type="button" ng-click="getThumbnailForVideo(vm.videoUrl)">Get Thumbs</button>
-    <div>
-        <img ng-src="{{vm.thumbs}}" alt="thumbs" />
-    </div>
-    <input type="file" onchange="angular.element(this).scope().FileChange(event)" />
+    <video id="myVideo" src="https://www.w3schools.com/html/mov_bbb.mp4"></video>
 
+    <canvas id="myCanvas"></canvas>
+    <form>
+        <label for="time">Time:</label>
+        @*  <input type="number" id="time" value="0" ng-model="vm.time">*@
+        <button ng-click="vm.captureFrame()">Capture Frame</button>
+    </form>
+    <button ng-click="vm.captureFrameAndUpload()">Capture Frame and Upload</button>
 </div>
 
 
@@ -21,79 +20,127 @@
 
         app.controller("testController", function ($scope, $http, $timeout, $window) {
 
-            //vm = this;
-            $scope.vm = { videoUrl: "", thumbs: '' };
+            vm = this;
+            vm.time = 5;
+
+            vm.captureFrame = function () {
+                // Get the video element and the canvas element
+                var video = document.getElementById('myVideo');
+                var canvas = document.getElementById('myCanvas');
+
+                // Get the time input element
+                var time = 0.2 * video.duration;
+
+                // Set the current time of the video to the calculated time
+                video.currentTime = time;
 
 
-            $scope.vm.videoUrl = "https://www.w3schools.com/html/mov_bbb.mp4";
+                // Wait for the video to seek to the specified time
+                video.addEventListener('seeked', function () {
+                    // Get the context of the canvas
+                    var context = canvas.getContext('2d');
 
-            $scope.getThumbnailForVideo = async function (videoUrl) {
-                const video = document.createElement("video");
-                const canvas = document.createElement("canvas");
-                video.style.display = "none";
-                canvas.style.display = "none";
+                    // Set the canvas size to the size of the video
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
 
-                // Trigger video load
-                await new Promise((resolve, reject) => {
-                    video.addEventListener("loadedmetadata", () => {
-                        video.width = video.videoWidth;
-                        video.height = video.videoHeight;
-                        canvas.width = video.videoWidth;
-                        canvas.height = video.videoHeight;
-                        // Seek the video to 25%
-                        video.currentTime = video.duration * 0.25;
+                    // Draw the current frame of the video onto the canvas
+                    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                    // Convert the canvas content to an image
+                    var image = new Image();
+                    image.crossOrigin = "Anonymous";
+
+                    image.src = canvas.toDataURL();
+
+
+
+                    // You can now use the image as you like, for example, displaying it in an img element or uploading it to a server.
+                });
+            }
+
+            vm.captureFrameAndUpload = function () {
+                // Get the video element and the canvas element
+                var video = document.getElementById('myVideo');
+                var canvas = document.getElementById('myCanvas');
+
+                // Get the time input element
+                var time = 0.2 * video.duration;
+
+                // Set the current time of the video to the calculated time
+                video.currentTime = time;
+
+
+                // Wait for the video to seek to the specified time
+                video.addEventListener('seeked', function () {
+                    // Get the context of the canvas
+                    var context = canvas.getContext('2d');
+
+                    // Set the canvas size to the size of the video
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+
+                    // Draw the current frame of the video onto the canvas
+                    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                    // Convert the canvas content to an image
+                    var image = new Image();
+                    image.crossOrigin = "Anonymous";
+
+                    image.src = canvas.toDataURL();
+
+                    vm.uploadImage(image.src, "test");
+                    //vm.putImage(image, 'image.png');
+
+
+
+                    // You can now use the image as you like, for example, displaying it in an img element or uploading it to a server.
+                });
+            }
+
+
+            vm.uploadImage = function (image, imageName) {
+
+                var apiUrl = "/api/Data/UploadImage";
+
+                var uploadImagePic = { Image: image, Name: imageName };
+                $http({
+                    method: 'put',
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    url: apiUrl
+                    , data: uploadImagePic
+                })
+                    .then(function (response) {
+
+                        console.log(response);
+
+                    }, function (err) {
+                        console.log(err);
+
+                    }).finally(function () {
+
                     });
-                    video.src = videoUrl;
-                    video.addEventListener("seeked", () => resolve());
-                });
 
-                // Draw the thumbnailz
-                canvas
-                    .getContext("2d")
-                    .drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
-                $scope.$apply(function () {
-                    $scope.vm.thumbs = canvas.toDataURL("image/png");
-                });
-                // return imageUrl;
-            };
+            }
 
-            $scope.createObjectURL = async function (videoUrl) {
-                const video = document.createElement("video");
-                const canvas = document.createElement("canvas");
-                video.style.display = "none";
-                canvas.style.display = "none";
+            vm.putImage = function(image: any, imageName: string) {
+                // Set the content type header of the request
+                const headers = new HttpHeaders().set('Content-Type', 'application/json');
 
-                // Trigger video load
-                await new Promise((resolve, reject) => {
-                    video.addEventListener("loadedmetadata", () => {
-                        video.width = video.videoWidth;
-                        video.height = video.videoHeight;
-                        canvas.width = video.videoWidth;
-                        canvas.height = video.videoHeight;
-                        // Seek the video to 25%
-                        video.currentTime = video.duration * 0.25;
-                    });
-                    video.src = videoUrl;
-                    video.addEventListener("seeked", () => resolve());
-                });
+                // Send the PUT request with the image data and the image name
+                this.http.put('/api/UploadImage', { image: image, name: imageName }, { headers: headers }).subscribe(
+                    // Handle the response
+                    (response) => {
+                        console.log(response);
+                    },
+                    (error) => {
+                        console.error(error);
+                    }
+                );
+            }
 
-                // Draw the thumbnailz
-                canvas
-                    .getContext("2d")
-                    .drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
-                $scope.$apply(function () {
-                    $scope.vm.thumbs = canvas.toDataURL("image/png");
-                });
-                // return imageUrl;
-            };
-
-
-
-            $scope.FileChange = async function (e) {
-                const fileUrl = URL.createObjectURL(e.target.files);
-                const thumbUrl = await getThumbnailForVideo(fileUrl);
-                img.src = thumbUrl;
-            };
 
 
         });</script>
