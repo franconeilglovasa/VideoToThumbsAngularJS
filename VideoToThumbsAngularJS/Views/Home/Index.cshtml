@@ -2,6 +2,22 @@
 
 <div ng-app="app-test" ng-controller="testController as vm">
   
+    <form method="post" enctype="multipart/form-data" asp-asp-controller="HomeController" asp-action="Index">
+        @*<input type="file" />
+        <button ngclick="vm.upload()">Upload</button>*@
+        <input type="file" name="imgfile" />
+        <button type="submit">Upload</button>
+        <hr />
+        <h4>@ViewData["Message"]</h4>
+        <hr />
+
+        <textarea>@ViewData["None"]</textarea>
+        <br />
+        <br />
+        <br />
+    </form>
+    
+    
     <input type="file" ng-change="vm.onFileSelected($event)" />
 
     <video ng-src="{{vm.videoUrl}}" controls></video>
